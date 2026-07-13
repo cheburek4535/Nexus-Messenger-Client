@@ -1,0 +1,231 @@
+export type ColorPresetKey = 'default' | 'ocean' | 'forest' | 'sunset' | 'cyberpunk' | 'monochrome';
+
+export interface Palette {
+  background: string;
+  surface: string;
+  primary: string;
+  accent: string;
+  accentGlow: string;
+  text: string;
+  textSecondary: string;
+  border: string;
+  glass: string;
+  danger: string;
+  success: string;
+  warning: string;
+  overlay: string;
+}
+
+export interface ColorPreset {
+  name: string;
+  key: string;
+  light: Palette;
+  dark: Palette;
+}
+
+export const colorPresets: ColorPreset[] = [
+  {
+    name: 'Default',
+    key: 'default',
+    light: {
+      background: '#F5F7FA',
+      surface: '#FFFFFF',
+      primary: '#1C2C3C',
+      accent: '#3A7CA5',
+      accentGlow: '#5D9BC0',
+      text: '#1A1C1E',
+      textSecondary: '#5F6B7A',
+      border: '#D0D7DE',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#D32F2F',
+      success: '#2E7D32',
+      warning: '#F57C00',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#080E14',
+      surface: '#111A24',
+      primary: '#D6DDE6',
+      accent: '#4DA8DA',
+      accentGlow: '#6BC1F0',
+      text: '#D6DDE6',
+      textSecondary: '#7A8A99',
+      border: '#1E2A36',
+      glass: 'rgba(17,26,36,0.85)',
+      danger: '#EF5350',
+      success: '#43A047',
+      warning: '#FFA726',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    name: 'Ocean',
+    key: 'ocean',
+    light: {
+      background: '#E8F0FE',
+      surface: '#FFFFFF',
+      primary: '#0D2137',
+      accent: '#1565C0',
+      accentGlow: '#42A5F5',
+      text: '#0D2137',
+      textSecondary: '#546E7A',
+      border: '#B0C4DE',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#D32F2F',
+      success: '#2E7D32',
+      warning: '#F57C00',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#05101A',
+      surface: '#0A1E2E',
+      primary: '#E3F2FD',
+      accent: '#1E88E5',
+      accentGlow: '#64B5F6',
+      text: '#E3F2FD',
+      textSecondary: '#90A4AE',
+      border: '#1A2E42',
+      glass: 'rgba(10,30,46,0.85)',
+      danger: '#EF5350',
+      success: '#43A047',
+      warning: '#FFA726',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    name: 'Forest',
+    key: 'forest',
+    light: {
+      background: '#F0F7F0',
+      surface: '#FFFFFF',
+      primary: '#1B3A2A',
+      accent: '#2E7D32',
+      accentGlow: '#66BB6A',
+      text: '#1B3A2A',
+      textSecondary: '#5A7A6A',
+      border: '#C8E6C9',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#D32F2F',
+      success: '#2E7D32',
+      warning: '#F57C00',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#0A1A0E',
+      surface: '#0F2818',
+      primary: '#E8F5E9',
+      accent: '#43A047',
+      accentGlow: '#81C784',
+      text: '#E8F5E9',
+      textSecondary: '#81A890',
+      border: '#1A3A22',
+      glass: 'rgba(15,40,24,0.85)',
+      danger: '#EF5350',
+      success: '#43A047',
+      warning: '#FFA726',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    name: 'Sunset',
+    key: 'sunset',
+    light: {
+      background: '#FDF5EF',
+      surface: '#FFFFFF',
+      primary: '#3E2723',
+      accent: '#E65100',
+      accentGlow: '#FF8A65',
+      text: '#3E2723',
+      textSecondary: '#8D6E63',
+      border: '#FFCCBC',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#D32F2F',
+      success: '#2E7D32',
+      warning: '#F57C00',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#1A0E08',
+      surface: '#2C1A10',
+      primary: '#FBE9E7',
+      accent: '#FF6F00',
+      accentGlow: '#FFAB91',
+      text: '#FBE9E7',
+      textSecondary: '#A1887F',
+      border: '#3E2723',
+      glass: 'rgba(44,26,16,0.85)',
+      danger: '#EF5350',
+      success: '#43A047',
+      warning: '#FFA726',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    name: 'Cyberpunk',
+    key: 'cyberpunk',
+    light: {
+      background: '#F5F0FF',
+      surface: '#FFFFFF',
+      primary: '#1A0033',
+      accent: '#7C4DFF',
+      accentGlow: '#B388FF',
+      text: '#1A0033',
+      textSecondary: '#6A508A',
+      border: '#D1C4E9',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#FF1744',
+      success: '#00E676',
+      warning: '#FFAB00',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#0D001A',
+      surface: '#1A0033',
+      primary: '#F3E5FF',
+      accent: '#B388FF',
+      accentGlow: '#E040FB',
+      text: '#F3E5FF',
+      textSecondary: '#9E7BB5',
+      border: '#2A0050',
+      glass: 'rgba(26,0,51,0.85)',
+      danger: '#FF1744',
+      success: '#00E676',
+      warning: '#FFAB00',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+  {
+    name: 'Monochrome',
+    key: 'monochrome',
+    light: {
+      background: '#F5F5F5',
+      surface: '#FFFFFF',
+      primary: '#212121',
+      accent: '#616161',
+      accentGlow: '#9E9E9E',
+      text: '#212121',
+      textSecondary: '#757575',
+      border: '#E0E0E0',
+      glass: 'rgba(255,255,255,0.7)',
+      danger: '#424242',
+      success: '#424242',
+      warning: '#616161',
+      overlay: 'rgba(0,0,0,0.4)',
+    },
+    dark: {
+      background: '#0A0A0A',
+      surface: '#141414',
+      primary: '#EEEEEE',
+      accent: '#9E9E9E',
+      accentGlow: '#BDBDBD',
+      text: '#EEEEEE',
+      textSecondary: '#757575',
+      border: '#1E1E1E',
+      glass: 'rgba(20,20,20,0.85)',
+      danger: '#9E9E9E',
+      success: '#9E9E9E',
+      warning: '#BDBDBD',
+      overlay: 'rgba(0,0,0,0.6)',
+    },
+  },
+];

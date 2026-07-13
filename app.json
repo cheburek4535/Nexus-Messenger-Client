@@ -1,0 +1,62 @@
+{
+  "expo": {
+    "name": "Nexus Messenger",
+    "slug": "nexus-messenger",
+    "version": "1.0.5",
+    "orientation": "portrait",
+    "icon": "./assets/images/nexus-icon.png",
+    "scheme": "nexusmessenger",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/nexus-icon.png",
+        "backgroundColor": "#1A1A1A" 
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "YOUR_EXPO_PACKAGE_URL" 
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/nexus-icon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/nexus-icon.png",
+          "imageWidth": 375,
+          "resizeMode": "contain",
+          "backgroundColor": "#1A1A1A",
+          "dark": {
+            "backgroundColor": "#1A1A1A"
+          }
+        }
+      ],
+      "expo-font",
+      "expo-secure-store",
+      "expo-sqlite",
+      [
+        "expo-notifications",
+        {
+          "color": "#ffffff"
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "YOUR_EXPO_PROJECT_ID"
+      }
+    }
+  }
+}
