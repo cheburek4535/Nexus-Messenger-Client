@@ -3,7 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { t } from './i18n';
 
 const SERVER_URL_KEY = 'nexus_server_url';
-const DEFAULT_SERVER_URL = 'YOUR_SERVER_URL'; //here was my server url 
+const DEFAULT_SERVER_URL = 'https://nexus-backend-vqdr.onrender.com';
 
 let cachedServerUrls: { http: string; ws: string } | null = null;
 

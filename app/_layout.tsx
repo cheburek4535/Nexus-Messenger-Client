@@ -15,6 +15,7 @@ import {
   initializeNotifications,
   registerPushToken,
   setupNotificationResponseHandler,
+  handleColdStartNotification,
 } from '../src/services/notifications';
 import { loadSavedLanguage } from '../src/services/i18n';
 
@@ -80,6 +81,7 @@ const RootNavigator = () => {
       registerPushToken().catch(() => {});
     });
     setupNotificationResponseHandler();
+    handleColdStartNotification();
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       console.log('App state:', nextAppState);

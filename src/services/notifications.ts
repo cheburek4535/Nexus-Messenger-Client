@@ -1,22 +1,25 @@
 import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { Platform, AppState } from 'react-native';
 import { router } from 'expo-router';
+import Constants from 'expo-constants';
 import { getSettings } from './settingsService';
 import { getLocalIdentity } from './identity';
 import { updatePushTokenOnServer } from './api';
 import type { NotificationResponse } from 'expo-notifications';
 
-let notificationListener: (() => void) | null = null;
 let responseListener: (() => void) | null = null;
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async () => {
+    const isForeground = AppState.currentState === 'active';
+    return {
+      shouldShowAlert: !isForeground,
+      shouldPlaySound: !isForeground,
+      shouldSetBadge: false,
+      shouldShowBanner: !isForeground,
+      shouldShowList: !isForeground,
+    };
+  },
 });
 
 export async function initializeNotifications(): Promise<void> {
@@ -31,8 +34,9 @@ export async function initializeNotifications(): Promise<void> {
     });
     await Notifications.setNotificationChannelAsync('groups', {
       name: 'Group Messages',
-      importance: Notifications.AndroidImportance.DEFAULT,
+      importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 50, 50, 50],
+      sound: 'default',
     });
   }
 
@@ -58,8 +62,9 @@ export async function registerPushToken(): Promise<void> {
     const { status } = await Notifications.getPermissionsAsync();
     if (status !== 'granted') return;
 
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
     const { data: token } = await Notifications.getExpoPushTokenAsync({
-      projectId: undefined,
+      projectId: projectId || undefined,
     });
     if (!token) return;
 
@@ -90,7 +95,32 @@ export function setupNotificationResponseHandler(): void {
   if (Platform.OS === 'web') return;
 
   responseListener?.();
-  responseListener = Notifications.addNotificationResponseReceivedListener((response: NotificationResponse) => {
+  responseListener = Notifications.addNotificationResponseReceivedListener(
+    (response: NotificationResponse) => {
+      const data = response.notification.request.content.data;
+      if (!data) return;
+
+      const { type, target } = data as { type?: string; target?: string };
+      if (!type || !target) return;
+
+      if (type === 'dm') {
+        router.push(`/chat/${target}` as any);
+      } else if (type === 'group') {
+        router.push(`/group/${target}` as any);
+      } else if (type === 'channel') {
+        router.push(`/channel/${target}` as any);
+      }
+    }
+  );
+}
+
+export async function handleColdStartNotification(): Promise<void> {
+  if (Platform.OS === 'web') return;
+
+  try {
+    const response = await Notifications.getLastNotificationResponseAsync();
+    if (!response) return;
+
     const data = response.notification.request.content.data;
     if (!data) return;
 
@@ -104,12 +134,10 @@ export function setupNotificationResponseHandler(): void {
     } else if (type === 'channel') {
       router.push(`/channel/${target}` as any);
     }
-  });
+  } catch {}
 }
 
 export function cleanupNotificationListeners(): void {
-  notificationListener?.();
-  notificationListener = null;
   responseListener?.();
   responseListener = null;
 }

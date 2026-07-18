@@ -55,6 +55,7 @@ import { toggleReaction, getMyReaction } from '../../src/services/reactionsServi
 import { setPendingForward } from '../../src/services/forwardService';
 import { getCachedMessages, setCachedMessages, appendMessage, updateMessageInCache, removeMessageFromCache } from '../../src/services/messageCache';
 import { FadeInView } from '../../src/utils/animations';
+import { downloadFile } from '../../src/utils/downloadFile';
 import { useChatScroll } from '../../src/hooks/useChatScroll';
 import ScrollToBottomButton from '../../src/components/ui/ScrollToBottomButton';
 import MediaViewer from '../../src/components/ui/MediaViewer';
@@ -1358,6 +1359,14 @@ setMessages(prev => {
           router.push('/forward-picker' as any);
         },
       },
+      ...(msg.contentUri ? [{
+        label: t('chat.downloadFile'),
+        icon: 'download-outline' as const,
+        onPress: () => {
+          setActionSheetVisible(false);
+          downloadFile(msg.contentUri!, msg.mediaMimeType || undefined);
+        },
+      }] : []),
       {
         label: t('chat.copyMessage'),
         icon: 'copy-outline',

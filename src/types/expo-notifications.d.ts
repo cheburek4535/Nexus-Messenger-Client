@@ -64,6 +64,7 @@ declare module 'expo-notifications' {
     importance: AndroidImportance;
     vibrationPattern?: number[];
     sound?: string;
+    lightColor?: string;
   }): Promise<void>;
   export function setNotificationHandler(handler: {
     handleNotification: (notification: Notification) => Promise<{
@@ -82,4 +83,6 @@ declare module 'expo-notifications' {
   export function addNotificationReceivedListener(callback: (notification: Notification) => void): () => void;
   export function removeNotificationSubscription(subscription: () => void): void;
   export function dismissAllNotificationsAsync(): Promise<void>;
+  export function getLastNotificationResponseAsync(): Promise<NotificationResponse | null>;
+  export function setBadgeCountAsync(count: number): Promise<void>;
 }

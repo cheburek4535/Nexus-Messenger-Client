@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Image, StyleSheet, Dimensions, Animated, Easing, TouchableOpacity, Platform, BackHandler, Text } from 'react-native';
+import { View, Image, StyleSheet, Dimensions, Animated, Easing, TouchableOpacity, Platform, BackHandler, Text, Alert } from 'react-native';
 import { PanGestureHandler, State, PanGestureHandlerGestureEvent } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { Video, ResizeMode } from 'expo-av';
 import { useTheme } from '../../theme/ThemeContext';
+import { downloadFile } from '../../utils/downloadFile';
+import { t } from '../../services/i18n';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -31,6 +33,7 @@ const MediaViewer: React.FC<MediaViewerProps> = ({
   const [videoDuration, setVideoDuration] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
+  const [showMenu, setShowMenu] = useState(false);
   const controlsTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const videoRef = useRef<Video | null>(null);
 const [translateX] = useState(() => new Animated.Value(0));
@@ -131,10 +134,12 @@ const [translateX] = useState(() => new Animated.Value(0));
   };
 
   const onTap = () => {
-    setShowControls(!showControls);
+    if (showMenu) { setShowMenu(false); return; }
+    const next = !showControls;
+    setShowControls(next);
     if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current);
-    if (showControls) {
-      controlsTimeoutRef.current = setTimeout(() => setShowControls(false), 3000);
+    if (next) {
+      controlsTimeoutRef.current = setTimeout(() => { setShowControls(false); setShowMenu(false); }, 3000);
     }
   };
 
@@ -145,6 +150,15 @@ const [translateX] = useState(() => new Animated.Value(0));
         setVideoDuration(status.durationMillis || 0);
         setIsPlaying(status.isPlaying);
       }
+    }
+  };
+
+  const handleDownload = async () => {
+    setShowMenu(false);
+    try {
+      await downloadFile(uri, mimeType, title);
+    } catch (error) {
+      Alert.alert('Download failed', 'Could not download this file.');
     }
   };
 
@@ -194,7 +208,19 @@ const [translateX] = useState(() => new Animated.Value(0));
                   <Ionicons name={Platform.OS === 'ios' ? 'chevron-down' : 'close'} size={28} color={colors.text} />
                 </TouchableOpacity>
                 {title && <Text style={styles.title} numberOfLines={1}>{title}</Text>}
-                <View style={{ width: 48 }} />
+                <View>
+                  <TouchableOpacity onPress={() => { setShowMenu(!showMenu); if (controlsTimeoutRef.current) clearTimeout(controlsTimeoutRef.current); }} style={styles.menuButton} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <Ionicons name="ellipsis-vertical" size={24} color={colors.text} />
+                  </TouchableOpacity>
+                  {showMenu && (
+                    <View style={[styles.dropdown, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+                      <TouchableOpacity style={styles.dropdownItem} onPress={handleDownload}>
+                        <Ionicons name="download-outline" size={18} color={colors.accent} style={{ marginRight: 8 }} />
+                        <Text style={[styles.dropdownText, { color: colors.primary }]}>{t('chat.downloadMedia')}</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
+                </View>
               </View>
 
               {mediaType === 'video' && (
@@ -276,6 +302,33 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     padding: 8,
+  },
+  menuButton: {
+    padding: 8,
+  },
+  dropdown: {
+    position: 'absolute',
+    top: 44,
+    right: 0,
+    borderRadius: 12,
+    borderWidth: 0.5,
+    paddingVertical: 4,
+    minWidth: 160,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+  },
+  dropdownText: {
+    fontSize: 15,
+    fontWeight: '400',
   },
   title: {
     flex: 1,

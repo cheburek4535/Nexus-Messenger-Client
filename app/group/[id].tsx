@@ -52,6 +52,7 @@ import { FadeInView } from '../../src/utils/animations';
 import { useChatScroll } from '../../src/hooks/useChatScroll';
 import ScrollToBottomButton from '../../src/components/ui/ScrollToBottomButton';
 import MediaViewer from '../../src/components/ui/MediaViewer';
+import { downloadFile } from '../../src/utils/downloadFile';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -628,6 +629,14 @@ const GroupChatScreen = () => {
           router.push('/forward-picker' as any);
         },
       },
+      ...(msg.contentUri ? [{
+        label: t('chat.downloadFile'),
+        icon: 'download-outline' as const,
+        onPress: () => {
+          setActionSheetVisible(false);
+          downloadFile(msg.contentUri!, msg.mediaMimeType || undefined);
+        },
+      }] : []),
       {
         label: t('chat.copyMessage'),
         icon: 'copy-outline',

@@ -27,6 +27,7 @@ import ScrollToBottomButton from '../src/components/ui/ScrollToBottomButton';
 import MediaViewer from '../src/components/ui/MediaViewer';
 import { useChatScroll } from '../src/hooks/useChatScroll';
 import { FadeInView } from '../src/utils/animations';
+import { downloadFile } from '../src/utils/downloadFile';
 import { t } from '../src/services/i18n';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -599,6 +600,14 @@ const SavedMessagesScreen = () => {
           router.push('/forward-picker' as any);
         },
       },
+      ...(msg.contentUri ? [{
+        label: t('chat.downloadFile'),
+        icon: 'download-outline' as const,
+        onPress: () => {
+          setActionSheetVisible(false);
+          downloadFile(msg.contentUri!, msg.mediaMimeType || undefined);
+        },
+      }] : []),
       {
         label: t('chat.copyMessage'),
         icon: 'copy-outline',
