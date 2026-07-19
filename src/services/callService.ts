@@ -43,6 +43,8 @@ class CallService {
   private remoteStream: MediaStream | null = null;
   private ringtoneSound: Audio.Sound | null = null;
   private pendingCandidates: RTCIceCandidate[] = [];
+  private pendingWebRTCMessages: { type: string; data: string }[] = [];
+  private isPCReady: boolean = false;
 
   private stateCallbacks: CallStateCallback[] = [];
   private actionCallbacks: CallActionCallback[] = [];
@@ -147,18 +149,30 @@ class CallService {
           }
           break;
         case 'webrtc_offer':
-          if (this.state === 'connected' && (msg.call_id || msg.callId) === this.callId) {
-            this.handleRemoteOffer(msg.content_text || msg.contentText);
+          if ((msg.call_id || msg.callId) === this.callId) {
+            if (this.isPCReady) {
+              this.handleRemoteOffer(msg.content_text || msg.contentText);
+            } else {
+              this.pendingWebRTCMessages.push({ type: 'offer', data: msg.content_text || msg.contentText });
+            }
           }
           break;
         case 'webrtc_answer':
-          if (this.state === 'connected' && (msg.call_id || msg.callId) === this.callId) {
-            this.handleRemoteAnswer(msg.content_text || msg.contentText);
+          if ((msg.call_id || msg.callId) === this.callId) {
+            if (this.isPCReady) {
+              this.handleRemoteAnswer(msg.content_text || msg.contentText);
+            } else {
+              this.pendingWebRTCMessages.push({ type: 'answer', data: msg.content_text || msg.contentText });
+            }
           }
           break;
         case 'webrtc_ice':
-          if (this.state === 'connected' && (msg.call_id || msg.callId) === this.callId) {
-            this.handleRemoteIce(msg.content_text || msg.contentText);
+          if ((msg.call_id || msg.callId) === this.callId) {
+            if (this.isPCReady) {
+              this.handleRemoteIce(msg.content_text || msg.contentText);
+            } else {
+              this.pendingWebRTCMessages.push({ type: 'ice', data: msg.content_text || msg.contentText });
+            }
           }
           break;
       }
@@ -321,18 +335,32 @@ class CallService {
       }
     };
 
+    // Process any WebRTC messages that arrived before PC was ready
+    for (const pending of this.pendingWebRTCMessages) {
+      if (pending.type === 'offer') this.handleRemoteOffer(pending.data);
+      else if (pending.type === 'answer') this.handleRemoteAnswer(pending.data);
+      else if (pending.type === 'ice') this.handleRemoteIce(pending.data);
+    }
+    this.pendingWebRTCMessages = [];
+    this.isPCReady = true;
+
     if (isCaller) {
-      const offer = await this.pc.createOffer({
-        offerToReceiveAudio: true,
-      });
-      await this.pc.setLocalDescription(offer);
-      wsManager.sendMessage({
-        type: 'webrtc_offer',
-        from_user: wsManager.getUsername(),
-        to_user: this.peerUsername,
-        call_id: this.callId,
-        content_text: JSON.stringify(this.pc.localDescription),
-      });
+      try {
+        const offer = await this.pc.createOffer({
+          offerToReceiveAudio: true,
+        });
+        await this.pc.setLocalDescription(offer);
+        wsManager.sendMessage({
+          type: 'webrtc_offer',
+          from_user: wsManager.getUsername(),
+          to_user: this.peerUsername,
+          call_id: this.callId,
+          content_text: JSON.stringify(this.pc.localDescription),
+        });
+      } catch (e) {
+        console.error('Failed to create offer:', e);
+        this.endCall();
+      }
     }
   }
 
@@ -404,6 +432,8 @@ class CallService {
     }
     this.remoteStream = null;
     this.pendingCandidates = [];
+    this.pendingWebRTCMessages = [];
+    this.isPCReady = false;
   }
 
   async playRingtone() {
