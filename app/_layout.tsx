@@ -11,6 +11,7 @@ import { getDatabase } from '../src/database/connection';
 import { startAutoDeleteScheduler } from '../src/services/autoDeleteService';
 import { StatusBar } from 'expo-status-bar';
 import { ghostChatManager } from '../src/services/ghostChatManager';
+import { callService } from '../src/services/callService';
 import {
   initializeNotifications,
   registerPushToken,
@@ -75,6 +76,18 @@ const RootNavigator = () => {
 
 	console.log('🌐 Connecting WebSocket (auto-registers if needed)');
     wsManager.connect();
+    callService.init();
+
+    // Listen for incoming calls
+    const unsubCallAction = callService.onCallAction((action, data) => {
+      if (action === 'incoming_call') {
+        // Guard: only navigate if we're not already on a call screen
+        const currentState = callService.getState();
+        if (currentState.state === 'incoming' || currentState.state === 'idle') {
+          router.push(`/call/${data.fromUser}` as any);
+        }
+      }
+    });
     startAutoDeleteScheduler();
 
     initializeNotifications().then(() => {
@@ -107,6 +120,7 @@ const RootNavigator = () => {
     return () => {
       subscription.remove();
       unsub();
+      unsubCallAction();
     };
   }, [hasProfile, isDbReady]);
 
@@ -138,6 +152,7 @@ const RootNavigator = () => {
             ) : (
               <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             )}
+            <Stack.Screen name="call/[username]" options={{ headerShown: false, animation: 'slide_from_bottom', gestureEnabled: false }} />
           </Stack>
         </View>
       </GestureHandlerRootView>

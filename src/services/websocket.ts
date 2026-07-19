@@ -39,6 +39,14 @@ class WebSocketManager {
   private systemCallbacks: Map<string, ((data: any) => void)[]> = new Map();
   private reactionCallbacks: ((data: { messageId: string; fromUser: string; reaction: string }) => void)[] = [];
   private groupReadCallbacks: ((data: { groupId: string; messageId: string; fromUser: string }) => void)[] = [];
+  private callCallbacks: ((data: any) => void)[] = [];
+
+  onCallMessage(callback: (data: any) => void) {
+    this.callCallbacks.push(callback);
+    return () => {
+      this.callCallbacks = this.callCallbacks.filter(cb => cb !== callback);
+    };
+  }
 
   sendReaction(messageId: string, reaction: string, toUser: string) {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
@@ -203,6 +211,17 @@ class WebSocketManager {
             if (groupReadData.messageId && groupReadData.groupId && groupReadData.fromUser) {
               this.groupReadCallbacks.forEach(cb => cb(groupReadData));
             }
+            return;
+          }
+
+          // Call-related messages
+          if (rawData.type === 'call_initiate' || rawData.type === 'call_accept' ||
+              rawData.type === 'call_reject' || rawData.type === 'call_end' ||
+              rawData.type === 'call_audio' || rawData.type === 'call_busy' ||
+              rawData.type === 'call_offline' || rawData.type === 'call_ringing' ||
+              rawData.type === 'webrtc_offer' || rawData.type === 'webrtc_answer' ||
+              rawData.type === 'webrtc_ice') {
+            this.callCallbacks.forEach(cb => cb(rawData));
             return;
           }
           

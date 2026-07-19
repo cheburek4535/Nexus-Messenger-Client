@@ -351,6 +351,18 @@ const en: Record<string, LangDict[keyof LangDict]> = {
   'chatlist.ghostChatActive': 'Ghost chat active',
   'chatlist.newChat': 'New Chat',
 
+  // Call
+  'call.calling': 'Calling...',
+  'call.connected': 'Connected',
+  'call.ended': 'Call ended',
+  'call.accept': 'Accept',
+  'call.decline': 'Decline',
+  'call.end': 'End',
+  'call.mute': 'Mute',
+  'call.unmute': 'Unmute',
+  'call.speaker': 'Speaker',
+  'call.speakerOff': 'Speaker Off',
+
   // Channel
   'channel.create': 'Create Channel',
   'channel.type': 'Channel',
@@ -750,6 +762,18 @@ const ru: Record<string, LangDict[keyof LangDict]> = {
   // Chat list additions
   'chatlist.ghostChatActive': 'Призрачный чат активен',
   'chatlist.newChat': 'Новый чат',
+
+  // Call
+  'call.calling': 'Звонок...',
+  'call.connected': 'Соединение установлено',
+  'call.ended': 'Звонок завершён',
+  'call.accept': 'Ответить',
+  'call.decline': 'Отклонить',
+  'call.end': 'Завершить',
+  'call.mute': 'Микрофон выкл',
+  'call.unmute': 'Микрофон вкл',
+  'call.speaker': 'Громкая связь',
+  'call.speakerOff': 'Громкая связь выкл',
 
   // Channel
   'channel.create': 'Создать канал',

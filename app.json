@@ -2,14 +2,19 @@
   "expo": {
     "name": "Nexus Messenger",
     "slug": "nexus-messenger",
-    "version": "1.0.6",
+    "version": "1.0.7",
     "orientation": "portrait",
     "icon": "./assets/images/nexus-icon.png",
     "scheme": "nexusmessenger",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Need microphone access for voice calls",
+        "NSCameraUsageDescription": "Need camera access for video calls"
+      },
+      "bitcode": false
     },
     "android": {
       "adaptiveIcon": {
@@ -18,7 +23,13 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "YOUR_EXPO_PACKAGE_URL"
+      "package": "YOUR_EXPO_PACKAGE_URL",
+      "permissions": [
+        "android.permission.INTERNET",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "output": "static",
@@ -46,7 +57,8 @@
         {
           "color": "#ffffff"
         }
-      ]
+      ],
+      "@config-plugins/react-native-webrtc"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -83,7 +83,7 @@ const backgroundStyles = StyleSheet.create({
   dot: { position: 'absolute', width: 4, height: 4, borderRadius: 2 },
 });
 
-const ChatHeader = ({ username, displayName, avatarUri, isGhost, onBack, onMinimize, onSettings, onAvatarPress, colors, tz }: any) => {
+const ChatHeader = ({ username, displayName, avatarUri, isGhost, onBack, onMinimize, onSettings, onAvatarPress, onCall, colors, tz }: any) => {
   const initial = (displayName || username)?.replace('ghost_', '').substring(0, 2).toUpperCase();
 
   return (
@@ -129,6 +129,12 @@ const ChatHeader = ({ username, displayName, avatarUri, isGhost, onBack, onMinim
         </View>
       </TouchableOpacity>
 
+      {!isGhost && (
+        <TouchableOpacity onPress={onCall} style={headerStyles.callButton}>
+          <Ionicons name="call-outline" size={20} color={colors.accent} />
+        </TouchableOpacity>
+      )}
+
       {isGhost && (
         <TouchableOpacity onPress={onMinimize} style={headerStyles.minimizeButton}>
           <Ionicons name="chevron-down-outline" size={20} color={colors.textSecondary} />
@@ -169,6 +175,7 @@ const headerStyles = StyleSheet.create({
   ghostText: { fontSize: 8, fontWeight: '600', letterSpacing: 1 },
   status: { fontSize: 11, fontWeight: '300', letterSpacing: 0.5 },
   minimizeButton: { padding: 8 },
+  callButton: { padding: 8, marginRight: 2 },
   settingsButton: { padding: 8 },
 });
 
@@ -1392,6 +1399,11 @@ setMessages(prev => {
     router.push(`/profile/${realUsername}` as any);
   }, [realUsername]);
 
+  const handleCall = useCallback(() => {
+    if (isGhostChat) return;
+    router.push(`/call/${realUsername}` as any);
+  }, [realUsername, isGhostChat]);
+
   const handleDeleteMessage = async (messageId: string) => {
     if (isGhostChat) {
       setMessages(prev => {
@@ -1452,18 +1464,19 @@ setMessages(prev => {
       <StatusBar barStyle={isDark ? 'light-content' : 'dark-content'} />
 
       <View style={{ paddingTop: insets.top }}>
-        <ChatHeader
-          username={realUsername}
-          displayName={contactDisplayName || chat?.displayName || ''}
-          avatarUri={contactAvatar || chat?.avatarUri || ''}
-          isGhost={isGhost}
-          onBack={() => router.back()}
-          onMinimize={handleMinimize}
-          onSettings={() => setShowSettings(true)}
-          onAvatarPress={handleNavigateToProfile}
-          colors={colors}
-          tz={tzStr}
-        />
+          <ChatHeader
+            username={realUsername}
+            displayName={contactDisplayName || chat?.displayName || ''}
+            avatarUri={contactAvatar || chat?.avatarUri || ''}
+            isGhost={isGhost}
+            onBack={() => router.back()}
+            onMinimize={handleMinimize}
+            onSettings={() => setShowSettings(true)}
+            onAvatarPress={handleNavigateToProfile}
+            onCall={handleCall}
+            colors={colors}
+            tz={tzStr}
+          />
       </View>
 
 {(() => {
