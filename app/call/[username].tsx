@@ -17,7 +17,7 @@ const formatDuration = (seconds: number): string => {
 };
 
 const CallScreen = () => {
-  const { username } = useLocalSearchParams<{ username: string }>();
+  const { username, incoming, callId } = useLocalSearchParams<{ username: string; incoming?: string; callId?: string }>();
   const { colors, isDark } = useTheme();
   const insets = useSafeAreaInsets();
 
@@ -53,6 +53,13 @@ const CallScreen = () => {
         setIsRinging(true);
       }
       callInfoRef.current = initial.state;
+    } else if (incoming === 'true' && callId && username) {
+      setIsIncoming(true);
+      setCallState('incoming');
+      callService.setIncoming(callId, username);
+      callService.playRingtone();
+      callService.sendRinging();
+      setIsRinging(true);
     } else if (username) {
       setIsIncoming(false);
       setCallState('calling');
@@ -105,7 +112,7 @@ const CallScreen = () => {
       }
       callService.stopRingtone();
     };
-  }, [username]);
+  }, [username, incoming, callId]);
 
   const handleAccept = async () => {
     await callService.acceptCall();

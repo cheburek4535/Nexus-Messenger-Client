@@ -40,6 +40,7 @@ class WebSocketManager {
   private reactionCallbacks: ((data: { messageId: string; fromUser: string; reaction: string }) => void)[] = [];
   private groupReadCallbacks: ((data: { groupId: string; messageId: string; fromUser: string }) => void)[] = [];
   private callCallbacks: ((data: any) => void)[] = [];
+  private messageQueue: any[] = [];
 
   onCallMessage(callback: (data: any) => void) {
     this.callCallbacks.push(callback);
@@ -131,6 +132,15 @@ class WebSocketManager {
         console.log('✅ WebSocket connected as', this.username);
         this.isConnecting = false;
         this.notifyStatus(true);
+
+        // Flush queued messages
+        const queue = this.messageQueue.slice();
+        this.messageQueue = [];
+        for (const msg of queue) {
+          if (this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify(msg));
+          }
+        }
 
         this.pingInterval = setInterval(() => {
           if (this.ws?.readyState === WebSocket.OPEN) {
@@ -407,10 +417,11 @@ class WebSocketManager {
 
       let title = '';
       let body = '';
-      const contentText = data.content_text || data.ciphertext || '';
-      const sender = data.sender_username || data.from_user || '';
+      const contentText = data.content_text || '';
+      const sender = data.sender_username || data.from_user || data.fromUser || '';
+      const contentType = data.content_type || data.contentType || '';
       const preview = settings.notificationPreview
-        ? (contentText.substring(0, 120) || (data.content_type && data.content_type !== 'text' ? `[${data.content_type}]` : ''))
+        ? (contentText.substring(0, 120) || (contentType && contentType !== 'text' ? `[${contentType}]` : 'New message'))
         : 'New message';
 
       if (type === 'dm') {
@@ -460,8 +471,11 @@ class WebSocketManager {
   }
 
   sendMessage(data: any) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return;
-    this.ws.send(JSON.stringify(data));
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify(data));
+    } else {
+      this.messageQueue.push(data);
+    }
   }
 
   onMessage(callback: MessageCallback) {

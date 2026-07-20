@@ -1,4 +1,5 @@
 import { Audio } from 'expo-av';
+import { activateKeepAwakeAsync, deactivateKeepAwake } from 'expo-keep-awake';
 import { wsManager } from './websocket';
 import {
   RTCPeerConnection,
@@ -181,6 +182,14 @@ class CallService {
     this._unsub = wsManager.onCallMessage(handleCallMessage);
   }
 
+  setIncoming(callId: string, fromUser: string) {
+    this.callId = callId;
+    this.peerUsername = fromUser;
+    this.state = 'incoming';
+    this.notifyState();
+    this.notifyAction('incoming_call', { fromUser });
+  }
+
   async initiateCall(peerUsername: string): Promise<boolean> {
     if (this.state !== 'idle') return false;
 
@@ -335,6 +344,9 @@ class CallService {
       }
     };
 
+    // Keep screen on during call
+    try { activateKeepAwakeAsync(); } catch {}
+
     // Process any WebRTC messages that arrived before PC was ready
     for (const pending of this.pendingWebRTCMessages) {
       if (pending.type === 'offer') this.handleRemoteOffer(pending.data);
@@ -419,6 +431,8 @@ class CallService {
   }
 
   private closePC() {
+    try { deactivateKeepAwake(); } catch {}
+
     if (this.pc) {
       (this.pc as any).onicecandidate = null;
       (this.pc as any).ontrack = null;

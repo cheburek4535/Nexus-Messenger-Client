@@ -7,19 +7,26 @@ import { getLocalIdentity } from './identity';
 import { updatePushTokenOnServer } from './api';
 import type { NotificationResponse } from 'expo-notifications';
 
+interface NotificationAction {
+  identifier: string;
+  buttonTitle: string;
+  textInput?: { submitButtonTitle: string; placeholder: string };
+  options?: { isDestructive?: boolean; isAuthenticationRequired?: boolean; opensAppToForeground?: boolean };
+}
+
 let responseListener: (() => void) | null = null;
+let callActionCallback: ((action: string, data: any) => void) | null = null;
+
+const CALL_CATEGORY_ID = 'incoming_call';
+const ACTION_ACCEPT = 'ACCEPT';
+const ACTION_DECLINE = 'DECLINE';
 
 Notifications.setNotificationHandler({
-  handleNotification: async () => {
-    const isForeground = AppState.currentState === 'active';
-    return {
-      shouldShowAlert: !isForeground,
-      shouldPlaySound: !isForeground,
-      shouldSetBadge: false,
-      shouldShowBanner: !isForeground,
-      shouldShowList: !isForeground,
-    };
-  },
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
 });
 
 export async function initializeNotifications(): Promise<void> {
@@ -37,6 +44,12 @@ export async function initializeNotifications(): Promise<void> {
         name: 'Group Messages',
         importance: Notifications.AndroidImportance.HIGH,
         vibrationPattern: [0, 50, 50, 50],
+        sound: 'default',
+      });
+      await Notifications.setNotificationChannelAsync('calls', {
+        name: 'Calls',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
         sound: 'default',
       });
       console.log('✅ Android notification channels created');
@@ -62,6 +75,60 @@ export async function initializeNotifications(): Promise<void> {
   } catch (e) {
     console.error('Failed to get notification permissions:', e);
   }
+
+  try {
+    const acceptAction: NotificationAction = {
+      identifier: ACTION_ACCEPT,
+      buttonTitle: 'Accept',
+      options: {
+        opensAppToForeground: true,
+      },
+    };
+    const declineAction: NotificationAction = {
+      identifier: ACTION_DECLINE,
+      buttonTitle: 'Decline',
+      options: {
+        opensAppToForeground: true,
+      },
+    };
+    // setNotificationCategoryAsync may not be available on all SDK versions
+    try {
+      await (Notifications as any).setNotificationCategoryAsync(CALL_CATEGORY_ID, [acceptAction, declineAction]);
+    } catch (e) {
+      console.warn('Notification categories not supported:', e);
+    }
+    console.log('✅ Call notification category created');
+  } catch (e) {
+    console.error('Failed to create call notification category:', e);
+  }
+}
+
+export function onCallAction(cb: (action: string, data: any) => void) {
+  callActionCallback = cb;
+  return () => {
+    callActionCallback = null;
+  };
+}
+
+export function showIncomingCallNotification(callerUsername: string, callId: string) {
+  if (Platform.OS === 'web') return;
+
+  Notifications.scheduleNotificationAsync({
+    content: {
+      title: 'Incoming Call',
+      body: `@${callerUsername} is calling...`,
+      data: {
+        type: 'call_initiate',
+        target: callerUsername,
+        callId: callId,
+      },
+      sound: 'default',
+      ...(Platform.OS === 'android' ? { channelId: 'calls' } : {}),
+    },
+    trigger: null,
+  }).catch((e) => {
+    console.error('Failed to show incoming call notification:', e);
+  });
 }
 
 export async function registerPushToken(): Promise<string | null> {
@@ -140,10 +207,23 @@ export function setupNotificationResponseHandler(): void {
       const data = response.notification.request.content.data;
       if (!data) return;
 
-      const { type, target } = data as { type?: string; target?: string };
-      if (!type || !target) return;
+      const actionId = response.actionIdentifier;
+      const { type, target, callId } = data as { type?: string; target?: string; callId?: string };
 
-      console.log('📲 Notification tapped:', type, target);
+      console.log('📲 Notification response:', actionId, type, target);
+
+      if (type === 'call_initiate') {
+        if (callActionCallback) {
+          if (actionId === ACTION_ACCEPT || actionId === 'expo.modules.notifications.actions.DEFAULT') {
+            callActionCallback('accept', { fromUser: target, callId });
+          } else if (actionId === ACTION_DECLINE) {
+            callActionCallback('decline', { fromUser: target, callId });
+          }
+        }
+        return;
+      }
+
+      if (!type || !target) return;
 
       if (type === 'dm') {
         router.push(`/chat/${target}` as any);
@@ -166,10 +246,23 @@ export async function handleColdStartNotification(): Promise<void> {
     const data = response.notification.request.content.data;
     if (!data) return;
 
-    const { type, target } = data as { type?: string; target?: string };
-    if (!type || !target) return;
+    const actionId = response.actionIdentifier;
+    const { type, target, callId } = data as { type?: string; target?: string; callId?: string };
 
-    console.log('📲 Cold-start notification:', type, target);
+    console.log('📲 Cold-start notification:', actionId, type, target);
+
+    if (type === 'call_initiate') {
+      if (callActionCallback) {
+        if (actionId === ACTION_ACCEPT || actionId === 'expo.modules.notifications.actions.DEFAULT') {
+          callActionCallback('accept', { fromUser: target, callId });
+        } else if (actionId === ACTION_DECLINE) {
+          callActionCallback('decline', { fromUser: target, callId });
+        }
+      }
+      return;
+    }
+
+    if (!type || !target) return;
 
     if (type === 'dm') {
       router.push(`/chat/${target}` as any);

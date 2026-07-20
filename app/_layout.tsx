@@ -17,6 +17,8 @@ import {
   registerPushToken,
   setupNotificationResponseHandler,
   handleColdStartNotification,
+  showIncomingCallNotification,
+  onCallAction,
 } from '../src/services/notifications';
 import { loadSavedLanguage } from '../src/services/i18n';
 
@@ -81,11 +83,29 @@ const RootNavigator = () => {
     // Listen for incoming calls
     const unsubCallAction = callService.onCallAction((action, data) => {
       if (action === 'incoming_call') {
-        // Guard: only navigate if we're not already on a call screen
         const currentState = callService.getState();
         if (currentState.state === 'incoming' || currentState.state === 'idle') {
-          router.push(`/call/${data.fromUser}` as any);
+          if (AppState.currentState !== 'active') {
+            showIncomingCallNotification(data.fromUser, data.callId || currentState.callId);
+          } else {
+            router.push(`/call/${data.fromUser}` as any);
+          }
         }
+      }
+    });
+
+    // Handle incoming calls from push notifications
+    const unsubNotifCallAction = onCallAction((action, data) => {
+      if (action === 'accept') {
+        const currentState = callService.getState();
+        if (currentState.state === 'idle') {
+          router.push(`/call/${data.fromUser}?incoming=true&callId=${data.callId}` as any);
+        } else if (currentState.state === 'incoming' || currentState.state === 'calling') {
+          router.push(`/call/${data.fromUser}?incoming=true&callId=${data.callId}` as any);
+        }
+      } else if (action === 'decline') {
+        callService.rejectCall();
+        callService.reset();
       }
     });
     startAutoDeleteScheduler();
@@ -121,6 +141,7 @@ const RootNavigator = () => {
       subscription.remove();
       unsub();
       unsubCallAction();
+      unsubNotifCallAction();
     };
   }, [hasProfile, isDbReady]);
 
